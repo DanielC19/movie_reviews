@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Search form -->
+<form action="">
+    <div class="mb-3">
+        <label for="searchMovie" class="form-label">Search for Movie:</label>
+        <input type="text" name="searchMovie" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+{% if searchTerm %}
+    <p>Searching for {{ searchTerm }}</p>
+{% endif %}
+
+<div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+    {% for movie in movies %}
+        <!-- Card component  -->
+        <div class="card mb-4 mx-2" style="width: 12rem;">
+            <img src="{{ movie.image.url }}" class="card-img-top" alt="movie image">
+            <div class="card-body">
+                <h5 class="card-title">{{ movie.title }}</h5>
+                <p class="card-text">{{ movie.description }}</p>
+                {% if movie.genre %}
+                    <p class="card-text">Género: {{ movie.genre }}</p>
+                {% endif %}
+                {% if movie.year %}
+                    <p class="card-text">Fecha de salida: {{ movie.year }}</p>
+                {% endif %}
+                {% if movie.url %}
+                    <a href="{{ movie.url }}" class="btn btn-primary">Movie link</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock content %}

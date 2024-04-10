@@ -4,11 +4,16 @@ import matplotlib.pyplot as plt
 import matplotlib
 import io
 import urllib, base64
+from dotenv import load_dotenv, find_dotenv
+import json
+import os
+from openai import OpenAI
+import numpy as np
+
 
 from .models import Movie
 
 def home(request) :
-    # return render(request, 'home.html', { 'name': 'Daniel Correa' })
     searchTerm = request.GET.get('searchMovie')
     if searchTerm :
         movies = Movie.objects.filter(title__icontains=searchTerm)
@@ -89,3 +94,33 @@ def statistics_view(request) :
     graphic_genre = graphic_genre.decode('utf-8')
 
     return render(request, 'statistics.html', {'graphic_year': graphic_year, 'graphic_genre': graphic_genre})
+
+
+def recommendations(request) :
+    _ = load_dotenv('openAI.env')
+    client = OpenAI(
+        # This is the default and can be omitted
+        api_key=os.environ.get('openAI_api_key'),
+    )
+
+    movies = Movie.objects.all()
+
+    def get_embedding(text, model="text-embedding-3-small"):
+        text = text.replace("\n", " ")
+        return client.embeddings.create(input = [text], model=model).data[0].embedding
+
+    def cosine_similarity(a, b):
+        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+    searchTerm = request.GET.get('searchMovie')
+    if searchTerm :
+        emb = get_embedding(searchTerm)
+
+        sim = []
+        for i in range(len(movies)):
+            sim.append(cosine_similarity(emb,movies[i].emb))
+            sim = np.array(sim)
+            idx = np.argmax(sim)
+            print(movies[idx].title)
+
+    return render(request, 'recommendations.html', {'searchTerm': searchTerm, 'movies': movies})
